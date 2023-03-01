@@ -587,3 +587,4 @@ if put == "S":
     tempo()
     texto_rpg("(Guteber): Sim, existe uma pessoa que era muito amigo de seus pais, ele mora próximo onde está sugindo os Kaibtsu...\n")
     tempo()
+    texto_rpg("(Lana): ....")
