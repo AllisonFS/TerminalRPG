@@ -2,15 +2,28 @@ import random  # Importa a biblioteca para gerar números aleatórios
 import time  # Importa a biblioteca para manipulação de tempo (usado para delays)
 import sys  # Importa a biblioteca para controle da saída no terminal
 from os import system  # Importa a função system para limpar a tela do terminal
+from colorama import init, Fore  # Importa a biblioteca colorama para colorir o texto no terminal
+import pygame  # Importa a biblioteca pygame para manipulação de áudio
+
+
+pygame.init()  # Inicializa o pygame
+init()
 
 # Função para simular tempo de espera
 def tempo(t):
     time.sleep(t)  # Faz o programa "dormir" por 't' segundos
 
+
 # Função para exibir barras de vida
 def exibir_barra_vida(nome, vida, vida_max):
     barra = int((vida / vida_max) * 20)  # Calcula a proporção da barra de vida
-    print(f"{nome}: [{'#' * barra}{'-' * (20 - barra)}] {vida}/{vida_max} HP")  # Exibe a barra de vida no formato [####--------] 50/100 HP
+    if vida >= 40: 
+        print(f"{nome}: [{Fore.GREEN + '#' * barra + Fore.RESET}{'-' * (20 - barra)}] {vida}/{vida_max} HP")  # Exibe a barra de vida no formato [####--------] 50/100 HP
+    elif vida >= 21 and vida <= 39:
+        print(f"{nome}: [{Fore.YELLOW + '#' * barra + Fore.RESET}{'-' * (20 - barra)}] {vida}/{vida_max} HP")
+    else:
+        print(f"{nome}: [{Fore.RED + '#' * barra + Fore.RESET}{'-' * (20 - barra)}] {vida}/{vida_max} HP")
+
 
 # Função para exibir texto em estilo RPG (efeito de digitação)
 def texto_rpg(texto):
@@ -20,6 +33,7 @@ def texto_rpg(texto):
         time.sleep(0.05)  # Pausa entre cada letra para simular digitação
     print()  # Pula uma linha após o texto
 
+
 # Função para exibir texto com formatação especial
 def texto_massa(texto):
     print('\033[1;34m—\033[m' * 60)  # Exibe uma linha com traços azuis
@@ -27,6 +41,24 @@ def texto_massa(texto):
     print(texto)  # Exibe o texto centralizado
     print('\033[1;34m—\033[m' * 60)  # Exibe outra linha de traços azuis
     print('\033[1;34m<\033[m' * 60)  # Exibe outra linha de '<' em azul
+
+
+def musica_batalha():
+    pygame.mixer.music.load(r"music\batalha.mp3")  # Carrega a música
+    pygame.mixer.music.play(-1)  # Toca a música em loop infinito
+    pygame.mixer.music.set_volume(0.5)  # Define o volume da música
+
+
+def musica_venceu():
+    pygame.mixer.music.load(r"music\venceu.mp3")  # Carrega a música de vitória
+    pygame.mixer.music.play(0)  # Toca a música uma vez
+    pygame.mixer.music.set_volume(0.5)  # Define o volume da música
+
+
+def musica_perdeu():
+    pygame.mixer.music.load(r"music\game_over.mp3")  # Carrega a música de derrota
+    pygame.mixer.music.play(0)  # Toca a música uma vez
+    pygame.mixer.music.set_volume(0.5)  # Define o volume da música
 
 # Classe do personagem
 class Character:
@@ -39,6 +71,7 @@ class Character:
         self.frozen = False  # Indica se está congelado
         self.bonus_attack = False  # Indica se já usou trovão
         self.sorte = sorte  # Parâmetro para sorteios (probabilidades)
+
 
     def attack(self, opponent):
         """Ataca o oponente"""
@@ -56,6 +89,7 @@ class Character:
             texto_rpg(f"{self.name} está congelado e não pode atacar neste turno!")  # Caso o personagem esteja congelado
             self.frozen = False  # No próximo turno poderá atacar novamente
 
+
     def rage(self, opponent):
         """Ataca o oponente com Rage"""
         if not self.frozen:  # Só ataca se não estiver congelado
@@ -72,6 +106,7 @@ class Character:
             texto_rpg(f"{self.name} está congelado e não pode atacar neste turno!")  # Caso o personagem esteja congelado
             self.frozen = False  # No próximo turno poderá atacar novamente
 
+
     def dimensao(self, opponent):
         if not self.frozen:  # Só ataca se não estiver congelado
             sorteio = random.randint(0, self.sorte[2])  # Sorteio para determinar sucesso do ataque
@@ -87,12 +122,14 @@ class Character:
             texto_rpg(f"{self.name} está congelado e não pode atacar neste turno!")  # Caso o personagem esteja congelado
             self.frozen = False  # No próximo turno poderá atacar novamente
 
+
     def heal(self):
         """Cura a si mesmo"""
         heal_points = random.randint(self.heal_amount - 2, self.heal_amount + 2)  # Cálculo da cura aleatória
         self.health = min(self.health + heal_points, self.max_health)  # A vida não pode ultrapassar o máximo
         tempo(1)  # Pausa de 1 segundo para efeito
         texto_rpg(f"{self.name} se curou em {heal_points} pontos!")  # Exibe mensagem de cura
+
 
     def gelo(self, opponent):
         """Chance de congelar o inimigo"""
@@ -107,10 +144,12 @@ class Character:
             tempo(1)  # Pausa de 1 segundo para efeito
             texto_rpg(f"{self.name} tentou usar {self.attack_power[2]}, mas errou!")  # Exibe mensagem de erro
 
+
     def buff(self):
         """Aumenta o poder de ataque"""
         self.attack_power[1] += 2  # Aumenta o poder de ataque
         texto_rpg("Ataque aumentou em 2")  # Exibe mensagem de aumento de ataque
+
 
     def trovao(self):
         """Aumenta a velocidade apenas uma vez por luta"""
@@ -127,8 +166,10 @@ class Character:
         else:
             texto_rpg("TROVÃO já foi usado nesta luta!")  # Caso o bônus já tenha sido usado
 
+
 # Função principal da batalha
 def battle_boss_2(player, enemy):
+    musica_batalha()  # Inicia a música de batalha
     turno = 0  # Contador de turnos
     while player.health > 0 and enemy.health > 0:  # A luta continua enquanto ambos os personagens estiverem vivos
         turno += 1  # Incrementa o turno
@@ -166,7 +207,12 @@ def battle_boss_2(player, enemy):
 
         # Verifica se o inimigo foi derrotado
         if enemy.health <= 0:
-            texto_rpg(f"{enemy.name} foi derrotado! {player.name} venceu!")
+            system('cls||clear')
+            musica_venceu()
+            exibir_barra_vida(player.name, player.health, player.max_health)  # Exibe a barra de vida do jogador
+            exibir_barra_vida(enemy.name, enemy.health, enemy.max_health)  # Exibe a barra de vida do inimigo
+            texto_rpg(f"\n{enemy.name} foi derrotado! {player.name} venceu!")
+            tempo(2)  # Pausa de 2 segundos para efeito
             break  # Termina a batalha se o inimigo for derrotado
 
         # Turno do inimigo IA
@@ -195,11 +241,17 @@ def battle_boss_2(player, enemy):
 
         # Verifica se o jogador foi derrotado
         if player.health <= 0:
-            texto_rpg(f"{player.name} foi derrotado! {enemy.name} venceu!")
+            system('cls||clear')
+            musica_perdeu()
+            exibir_barra_vida(player.name, player.health, player.max_health)  # Exibe a barra de vida do jogador
+            exibir_barra_vida(enemy.name, enemy.health, enemy.max_health)  # Exibe a barra de vida do inimigo
+            texto_rpg(f"\n{player.name} foi derrotado! {enemy.name} venceu!")
+            tempo(10)  # Pausa de 10 segundos para fim da música
             break  # Termina a batalha se o jogador for derrotado
 
 # Criando personagens
 jogador = Character("Herói", 50, ["Espada", 10, "Rage", 20], 8, ["Trovãoooo",1,3])  # Personagem do jogador
 inimigo = Character("Monstro", 50, ["Garra", 10, "Geladinho", 13], 8, ["Fica Frio ae",1,2])  # Personagem do inimigo
+
 # Iniciar batalha
 battle_boss_2(jogador, inimigo)  # Inicia a batalha entre o jogador e o inimigo
